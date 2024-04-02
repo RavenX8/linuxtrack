@@ -41,7 +41,7 @@ AC_CHECK_LIB([mxml], [mxmlNewXML], [LIBMXML=true], [AC_MSG_FAILURE([libmxml not 
 AC_CHECK_HEADER([mxml.h], [], [AC_MSG_FAILURE([mxml.h is needed for ltr_gui compilation!])])
 
 # Qt is needed for the GUI
-AC_PATH_PROGS(QMAKE_PATH, [qmake qmake-qt4])
+AC_PATH_PROGS(QMAKE_PATH, [qmake qmake-qt5 qmake5])
 
 
 # used to decompress the TrackIR firmware, if necessary

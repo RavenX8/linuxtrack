@@ -109,6 +109,8 @@ enum formats {
 	FORMAT_UINPUT_ABS   = 7, // uinput absolute position (like a joystick)
 #endif
 	FORMAT_IL2_6DOF     = 8, // For IL-2 Shturmovik v4.11+ (6DOF) with DeviceLink protocol
+	FORMAT_OPENTRACK    = 9, // For opentrack UDP over network
+
 };
 
 
@@ -122,7 +124,7 @@ struct args
 	char          *ltr_profile;
 	char          *ltr_timeout;
 	enum formats  format;
-        int           range;
+	int           range;
 };
 
 static struct args Args = {
@@ -133,7 +135,7 @@ static struct args Args = {
 	.ltr_profile  = NULL, // DEFAULT_LTR_PROFILE
 	.ltr_timeout  = DEFAULT_LTR_TIMEOUT,
 	.format       = FORMAT_DEFAULT,
-        .range        = 4096
+    .range        = 4096
 };
 
 
@@ -161,8 +163,9 @@ enum option_codes {
 #endif
 	OPT_FORMAT_IL2_6DOF        = 0x11,
 #ifdef LINUX
-        OPT_UINPUT_ABS_RANGE       = 0x12
+	OPT_UINPUT_ABS_RANGE       = 0x12,
 #endif
+	OPT_FORMAT_OPENTRACK       = 0x13
 };
 
 
@@ -283,13 +286,19 @@ static struct option Opts[] = {
 		0,
 		OPT_FORMAT_UINPUT_ABS
 	},
-        {
-                "uinput-abs-range",
-                required_argument,
-                0,
-                OPT_UINPUT_ABS_RANGE
-        },
+    {
+            "uinput-abs-range",
+            required_argument,
+            0,
+            OPT_UINPUT_ABS_RANGE
+    },
 #endif
+	{
+		"format-opentrack",
+		no_argument,
+		0,
+		OPT_FORMAT_OPENTRACK
+	},
 	{ 0, 0, 0, 0 }
 };
 
@@ -344,6 +353,7 @@ static void help(void)
 "  --format-uinput-abs        uinput absolute position (like a joystick)\n"
 "  --uinput-abs-range=RANGE   specify precision of abs device (-RANGE to +RANGE)\n"
 #endif
+"  --format-headtrack         Opentrack UDP over network compatible format\n"
 "\n",
 
 	Program_name,
@@ -417,6 +427,9 @@ static void parse_opts(int argc, char **argv)
 			break;
 		case OPT_FORMAT_SILENTWINGS:
 			Args.format = FORMAT_SILENTWINGS;
+			break;
+		case OPT_FORMAT_OPENTRACK:
+			Args.format = FORMAT_OPENTRACK;
 			break;
 		case OPT_FORMAT_MOUSE:
 			Args.format = FORMAT_MOUSE;
@@ -656,9 +669,9 @@ static void ofd_setup_file(void)
 		xioctl(UI_SET_ABSBIT, ABS_RX);
 		xioctl(UI_SET_ABSBIT, ABS_RY);
 		xioctl(UI_SET_ABSBIT, ABS_RZ);
-  xioctl(UI_SET_EVBIT, EV_KEY);
-  xioctl(UI_SET_KEYBIT, BTN_JOYSTICK);
-  xioctl(UI_SET_KEYBIT, BTN_TRIGGER);
+		xioctl(UI_SET_EVBIT, EV_KEY);
+		xioctl(UI_SET_KEYBIT, BTN_JOYSTICK);
+		xioctl(UI_SET_KEYBIT, BTN_TRIGGER);
 
 		ud.absmin[ABS_X] = ud.absmin[ABS_RX] = -Args.range;
 		ud.absmin[ABS_Y] = ud.absmin[ABS_RY] = -Args.range;
@@ -905,6 +918,37 @@ static void write_data_flightgear(const struct ltr_data *d)
 	xwrite(buf, r);
 }
 
+/**
+ * write_data_opentrack() - Write data in Opentrack format
+ * @d:                     Data to write.
+ **/
+static void write_data_opentrack(const struct ltr_data *d)
+{
+	const size_t bsz = 48;
+	double buf[6];
+	double tmp;
+
+	tmp = (double) d->x;
+	memcpy(&buf[0], &tmp, sizeof(double));
+
+	tmp = (double) d->y;
+	memcpy(&buf[1], &tmp, sizeof(double));
+
+	tmp = (double) d->z;
+	memcpy(&buf[2], &tmp, sizeof(double));
+
+	tmp = (double) d->h;
+	memcpy(&buf[3], &tmp, sizeof(double));
+
+	tmp = (double) d->p;
+	memcpy(&buf[4], &tmp, sizeof(double));
+
+	tmp = (double) d->r;
+	memcpy(&buf[5], &tmp, sizeof(double));
+
+	xwrite(buf, bsz);
+}
+
 
 /**
  * write_data_il2() - Write data in IL-2 Shturmovik DeviceLink format
@@ -1130,6 +1174,9 @@ static void write_data(const struct ltr_data *d)
 		break;
 	case FORMAT_MOUSE:
 		write_data_mouse(d);
+		break;
+	case FORMAT_OPENTRACK:
+		write_data_opentrack(d);
 		break;
 
 #ifdef LINUX

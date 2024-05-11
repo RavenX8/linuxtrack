@@ -130,8 +130,9 @@ bool get_game_data(const char *input_fname, const char *output_fname, bool from_
   const char *name;
   const char *id;
   for(game = mxmlFindElement(tree, tree, "Game", NULL, NULL, MXML_DESCEND);
-      game != NULL;
-      game =  mxmlFindElement(game, tree, "Game", NULL, NULL, MXML_DESCEND)){
+    game != NULL;
+    game =  mxmlFindElement(game, tree, "Game", NULL, NULL, MXML_DESCEND))
+  {
     name = mxmlElementGetAttr(game, "Name");
     id = mxmlElementGetAttr(game, "Id");
 
@@ -141,7 +142,7 @@ bool get_game_data(const char *input_fname, const char *output_fname, bool from_
     }else{
       mxml_node_t *child = mxmlGetFirstChild(appid);
       if(child != NULL){
-	const char *val = mxmlGetElement(child);
+	      const char *val = mxmlGetElement(child);
         fprintf(outfile, "%s \"%s\" (%s)\n", id, name, val);
       }else{
         fprintf(outfile, "%s \"%s\"\n", id, name);

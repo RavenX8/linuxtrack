@@ -14,7 +14,7 @@
 #include "winbase.h"
 #include "winnt.h"
 #include <stdbool.h>
-
+#define DLL_WINE_PREATTACH 8
 
 typedef struct
 {

@@ -19,7 +19,7 @@
 #include "wine/debug.h"
 #include <linuxtrack.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(FreeTrackClient);
+//WINE_DEFAULT_DEBUG_CHANNEL(FreeTrackClient);
 
 
 typedef enum {DBG_CHECK, DBG_ON, DBG_OFF} dbg_flag_type; 
@@ -57,7 +57,7 @@ static void dbg_report(const char *msg,...)
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-    TRACE("(0x%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
+//    TRACE("(0x%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
 
     switch (fdwReason)
     {
